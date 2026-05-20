@@ -28,7 +28,10 @@ app.use(
       "http://localhost:5173",
       "http://localhost:5174",
 
+      // frontend
       "https://ecommerce-mern-chi-seven.vercel.app",
+
+      // admin
       "https://ecommerce-mern-13ri.vercel.app",
     ],
 
