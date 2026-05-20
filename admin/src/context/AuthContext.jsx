@@ -4,7 +4,7 @@ import { createContext } from "react";
 export const AuthDataContext = createContext();
 
 function AuthContext({ children }) {
-  let serverUrl = "http://localhost:8000";
+  let serverUrl = import.meta.env.VITE_API_URL || "http://localhost:8000";
   let value = {
     serverUrl,
   };

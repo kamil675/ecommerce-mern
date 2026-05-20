@@ -17,7 +17,9 @@ function AdminProvider({ children }) {
       setAdminData(result.data);
     } catch (error) {
       setAdminData(null);
-      console.log(error);
+      if (error.response?.status !== 401) {
+        console.log(error);
+      }
     }
   };
 
