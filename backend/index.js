@@ -19,7 +19,6 @@ const PORT = process.env.PORT || 8000;
 connectDb();
 
 app.use(express.json());
-
 app.use(cookieParser());
 
 app.use(
@@ -27,14 +26,9 @@ app.use(
     origin: [
       "http://localhost:5173",
       "http://localhost:5174",
-
-      // frontend
       "https://ecommerce-mern-chi-seven.vercel.app",
-
-      // admin
       "https://ecommerce-mern-13ri.vercel.app",
     ],
-
     credentials: true,
   }),
 );
@@ -43,11 +37,11 @@ app.get("/", (req, res) => {
   res.send("API Running...");
 });
 
-app.use("/api/payment", paymentRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/product", productRoutes);
 app.use("/api/cart", cartRoutes);
+app.use("/api/payment", paymentRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
