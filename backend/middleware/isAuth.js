@@ -1,31 +1,22 @@
-import jwt from "jsonwebtoken";
-
 const isAuth = async (req, res, next) => {
-  try {
-    const token = req.cookies.token;
+  console.log("FULL COOKIES:", req.cookies);
 
-    console.log("USER TOKEN:", token);
+  const token = req.cookies.token;
 
-    if (!token) {
-      return res.status(401).json({
-        success: false,
-        message: "User not logged in",
-      });
-    }
+  console.log("USER TOKEN:", token);
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-    req.userId = decoded.userId;
-
-    next();
-  } catch (error) {
-    console.log(error);
-
+  if (!token) {
     return res.status(401).json({
       success: false,
-      message: "Invalid token",
+      message: "User not logged in",
     });
   }
+
+  const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+  req.userId = decoded.userId;
+
+  next();
 };
 
 export default isAuth;
