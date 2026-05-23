@@ -1,7 +1,6 @@
 import express from "express";
 import dotenv from "dotenv";
 import connectDb from "./config/db.js";
-import cookieParser from "cookie-parser";
 import cors from "cors";
 
 import authRoutes from "./routes/authRoutes.js";
@@ -19,7 +18,6 @@ const PORT = process.env.PORT || 8000;
 connectDb();
 
 app.use(express.json());
-app.use(cookieParser());
 
 app.use(
   cors({
@@ -29,7 +27,6 @@ app.use(
       "https://ecommerce-mern-chi-seven.vercel.app",
       "https://ecommerce-mern-13ri.vercel.app",
     ],
-    credentials: true,
   }),
 );
 

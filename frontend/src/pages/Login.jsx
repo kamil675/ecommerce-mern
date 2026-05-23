@@ -1,166 +1,217 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaEyeSlash, FaEye } from "react-icons/fa";
-import { useContext } from "react";
-import { AuthDataContext } from "../context/AuthContext";
 import axios from "axios";
+
 import { signInWithPopup } from "firebase/auth";
-import { auth, provider } from "../../utils/Firebase.js";
+import { auth, provider } from "../../utils/Firebase";
+
+import { AuthDataContext } from "../context/AuthContext";
 import { UserDataContext } from "../context/UserContext";
 
 function Login() {
-  let [show, setShow] = useState(false);
-  let [email, setEmail] = useState("");
-  let [password, setPassword] = useState("");
-  let { serverUrl } = useContext(AuthDataContext);
-  let { getCurrentUser } = useContext(UserDataContext);
+  const navigate = useNavigate();
+
+  const { serverUrl } = useContext(AuthDataContext);
+  const { getCurrentUser } = useContext(UserDataContext);
+
+  const [show, setShow] = useState(false);
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  const [loading, setLoading] = useState(false);
+
+  // ================= NORMAL LOGIN =================
 
   const handleLogin = async (e) => {
     e.preventDefault();
 
     try {
-      const result = await axios.post(
-        serverUrl + "/api/auth/login",
-        {
-          email,
-          password,
-        },
-        { withCredentials: true },
-      );
+      setLoading(true);
 
-      console.log(result.data);
+      console.log("SERVER URL:", serverUrl);
 
-      // IMPORTANT
+      const result = await axios.post(`${serverUrl}/api/auth/login`, {
+        email,
+        password,
+      });
+
+      console.log("LOGIN RESPONSE:", result.data);
+
+      // ================= TOKEN CHECK =================
+
+      if (!result.data.token) {
+        console.log("TOKEN NOT RECEIVED FROM BACKEND");
+
+        alert("Token not received from backend");
+
+        setLoading(false);
+
+        return;
+      }
+
+      // ================= SAVE TOKEN =================
+
+      localStorage.setItem("token", result.data.token);
+
+      console.log("TOKEN SAVED:", localStorage.getItem("token"));
+
+      // ================= GET USER =================
+
       const currentUser = await getCurrentUser();
+
+      console.log("CURRENT USER:", currentUser);
 
       if (currentUser) {
         navigate("/");
+      } else {
+        alert("User fetch failed");
       }
     } catch (error) {
-      console.log(error);
+      console.log("LOGIN ERROR:", error.response?.data || error.message);
+
+      alert(error.response?.data?.error || "Login Failed");
+    } finally {
+      setLoading(false);
     }
   };
 
-  const navigate = useNavigate();
+  // ================= GOOGLE LOGIN =================
 
-  const googlelogin = async () => {
+  const googleLogin = async () => {
     try {
+      setLoading(true);
+
+      // FIREBASE LOGIN
+
       const response = await signInWithPopup(auth, provider);
 
-      let user = response.user;
+      const user = response.user;
 
-      let name = user.displayName;
-      let email = user.email;
+      console.log("GOOGLE USER:", user);
 
-      const result = await axios.post(
-        serverUrl + "/api/auth/googlelogin",
-        {
-          name,
-          email,
-        },
-        {
-          withCredentials: true,
-        },
-      );
+      // BACKEND LOGIN
+      console.log("SERVER URL:", serverUrl);
+      const result = await axios.post(`${serverUrl}/api/auth/googlelogin`, {
+        name: user.displayName,
+        email: user.email,
+      });
 
-      console.log(result.data);
+      console.log("GOOGLE LOGIN RESPONSE:", result.data);
 
-      // IMPORTANT
+      // TOKEN CHECK
+
+      if (!result.data.token) {
+        console.log("GOOGLE TOKEN NOT RECEIVED");
+
+        alert("Google token missing");
+
+        setLoading(false);
+
+        return;
+      }
+
+      // SAVE TOKEN
+
+      localStorage.setItem("token", result.data.token);
+
+      console.log("TOKEN SAVED:", localStorage.getItem("token"));
+
+      // GET USER
+
       const currentUser = await getCurrentUser();
+
+      console.log("CURRENT USER:", currentUser);
 
       if (currentUser) {
         navigate("/");
+      } else {
+        alert("Google user fetch failed");
       }
     } catch (error) {
-      console.log(error);
+      console.log("GOOGLE LOGIN ERROR:", error.response?.data || error.message);
+
+      alert("Google Login Failed");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="h-screen w-full bg-gradient-to-l from-[#141414] to-[#0c2025] text-white flex flex-col overflow-hidden">
-      {/* Header */}
+    <div className="h-screen w-full bg-black text-white flex justify-center items-center px-4">
+      <form
+        onSubmit={handleLogin}
+        className="w-full max-w-[400px] bg-[#111] p-5 rounded-lg flex flex-col gap-4 border border-gray-700"
+      >
+        <h1 className="text-2xl font-bold text-center">Login</h1>
 
-      {/* Centered Content */}
-      <div className="flex-1 flex flex-col items-center justify-center px-4">
-        {/* Title */}
-        <div className="text-center mb-6">
-          <h2 className="text-2xl font-semibold">Login Page</h2>
-          <p className="text-sm text-gray-300">
-            Welcome to our cart, place your order
-          </p>
-        </div>
+        {/* GOOGLE LOGIN */}
 
-        {/* Form Box */}
-        <div className="max-w-[500px] w-full bg-[#00000025] border border-[#96969635] backdrop-blur-2xl rounded-lg shadow-lg p-6">
-          <form onSubmit={handleLogin} className="flex flex-col gap-4">
-            {/* Google Button */}
-            <div
-              className="h-[45px] bg-[#42656cae] rounded-lg flex items-center justify-center cursor-pointer text-sm font-medium"
-              onClick={googlelogin}
-            >
-              Login with Google
-            </div>
+        <button
+          type="button"
+          onClick={googleLogin}
+          disabled={loading}
+          className="h-[45px] bg-blue-500 hover:bg-blue-600 rounded-lg transition-all"
+        >
+          {loading ? "Please wait..." : "Login with Google"}
+        </button>
 
-            {/* OR */}
-            <div className="flex items-center gap-2 text-gray-400 text-sm">
-              <div className="flex-1 h-[1px] bg-[#96969635]"></div>
-              OR
-              <div className="flex-1 h-[1px] bg-[#96969635]"></div>
-            </div>
+        {/* EMAIL */}
 
-            {/* Email */}
-            <input
-              type="email"
-              placeholder="Email"
-              className="h-[45px] border border-[#96969635] rounded-lg bg-transparent px-4 text-sm"
-              required
-              onChange={(e) => setEmail(e.target.value)}
-              value={email}
+        <input
+          type="email"
+          placeholder="Email"
+          required
+          className="h-[45px] px-3 rounded-lg bg-transparent border border-gray-600 outline-none"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+
+        {/* PASSWORD */}
+
+        <div className="relative">
+          <input
+            type={show ? "text" : "password"}
+            placeholder="Password"
+            required
+            className="h-[45px] px-3 rounded-lg bg-transparent border border-gray-600 outline-none w-full"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+
+          {show ? (
+            <FaEye
+              className="absolute top-4 right-3 cursor-pointer"
+              onClick={() => setShow(false)}
             />
-
-            {/* Password */}
-            <div className="relative">
-              <input
-                type={show ? "text" : "password"}
-                placeholder="Password"
-                className="h-[45px] w-full border border-[#96969635] rounded-lg bg-transparent px-4 pr-10 text-sm"
-                required
-                onChange={(e) => setPassword(e.target.value)}
-                value={password}
-              />
-
-              {show ? (
-                <FaEye
-                  className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer"
-                  onClick={() => setShow(false)}
-                />
-              ) : (
-                <FaEyeSlash
-                  className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer"
-                  onClick={() => setShow(true)}
-                />
-              )}
-            </div>
-
-            {/* Button */}
-            <button
-              type="submit"
-              className="h-[45px] bg-blue-600 hover:bg-blue-700 rounded-lg font-medium text-sm"
-            >
-              Login
-            </button>
-
-            {/* Login */}
-            <p
-              onClick={() => navigate("/signup")}
-              className="text-gray-400 text-sm text-center cursor-pointer hover:text-white"
-            >
-              you have not account?{" "}
-              <span className="text-blue-400">Create New account</span>
-            </p>
-          </form>
+          ) : (
+            <FaEyeSlash
+              className="absolute top-4 right-3 cursor-pointer"
+              onClick={() => setShow(true)}
+            />
+          )}
         </div>
-      </div>
+
+        {/* LOGIN BUTTON */}
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="h-[45px] bg-green-500 hover:bg-green-600 rounded-lg transition-all"
+        >
+          {loading ? "Loading..." : "Login"}
+        </button>
+
+        {/* SIGNUP */}
+
+        <p
+          className="text-center cursor-pointer text-gray-300 hover:text-white"
+          onClick={() => navigate("/signup")}
+        >
+          Create Account
+        </p>
+      </form>
     </div>
   );
 }

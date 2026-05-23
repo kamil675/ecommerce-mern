@@ -54,7 +54,7 @@ function Add() {
           headers: {
             "Content-Type": "multipart/form-data",
           },
-          withCredentials: true,
+     
         },
       );
       console.log(result.data);

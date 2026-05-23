@@ -3,7 +3,9 @@ import React, { createContext } from "react";
 export const AuthDataContext = createContext();
 
 function AuthContext({ children }) {
-  const serverUrl = import.meta.env.VITE_API_URL || "http://localhost:8000";
+  const serverUrl =
+    import.meta.env.VITE_API_URL ||
+    "https://ecommerce-backend-au35.onrender.com";
 
   return (
     <AuthDataContext.Provider value={{ serverUrl }}>

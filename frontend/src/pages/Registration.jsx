@@ -21,16 +21,14 @@ function Registration() {
   const handleSignup = async (e) => {
     e.preventDefault();
     try {
-      const result = await axios.post(
-        serverUrl + "/api/auth/registration",
-        {
-          name,
-          email,
-          password,
-        },
-        { withCredentials: true },
-      );
+      const result = await axios.post(serverUrl + "/api/auth/registration", {
+        name,
+        email,
+        password,
+      });
       console.log(result.data);
+
+      localStorage.setItem("token", result.data.token);
       await getCurrentUser();
       navigate("/");
     } catch (error) {
@@ -46,12 +44,13 @@ function Registration() {
       let name = user.displayName;
       let email = user.email;
 
-      const result = await axios.post(
-        serverUrl + "/api/auth/googlelogin",
-        { name, email },
-        { withCredentials: true },
-      );
+      const result = await axios.post(serverUrl + "/api/auth/googlelogin", {
+        name,
+        email,
+      });
       console.log(result.data);
+
+      localStorage.setItem("token", result.data.token);
       await getCurrentUser();
       navigate("/");
     } catch (error) {

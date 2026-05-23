@@ -2,14 +2,21 @@ import jwt from "jsonwebtoken";
 
 const AdminAuth = async (req, res, next) => {
   try {
-    const token = req.cookies.token1;
+    const authHeader = req.headers.authorization;
 
-    console.log("ADMIN TOKEN:", token);
+    if (!authHeader) {
+      return res.status(401).json({
+        success: false,
+        message: "Admin token not found",
+      });
+    }
+
+    const token = authHeader.split(" ")[1];
 
     if (!token) {
       return res.status(401).json({
         success: false,
-        message: "Admin token not found",
+        message: "Token missing",
       });
     }
 

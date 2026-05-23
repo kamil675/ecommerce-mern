@@ -6,26 +6,41 @@ export const UserDataContext = createContext();
 function UserContext({ children }) {
   const serverUrl = import.meta.env.VITE_API_URL;
 
-  const [userData, setUserData] = useState(undefined);
+  const [userData, setUserData] = useState(null);
 
   const getCurrentUser = async () => {
     try {
-      const { data } = await axios.get(`${serverUrl}/api/user/getcurrentuser`, {
-        withCredentials: true,
-      });
-      console.log("CURRENT USER:", data);
+      const token = localStorage.getItem("token");
 
-      if (data.success) {
-        setUserData(data.user);
-        return data.user;
+      console.log("TOKEN:", token);
+
+      if (!token) {
+        setUserData(null);
+        return null;
       }
 
-      setUserData(null);
-      return null;
+      const result = await axios.get(`${serverUrl}/api/user/getcurrentuser`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      console.log("CURRENT USER:", result.data);
+
+      if (result.data.success) {
+        setUserData(result.data.user);
+        return result.data.user;
+      }
     } catch (error) {
-      console.log("GET USER ERROR:", error.response?.data);
+      console.log(
+        "GET CURRENT USER ERROR:",
+        error.response?.data || error.message,
+      );
+
+      localStorage.removeItem("token");
 
       setUserData(null);
+
       return null;
     }
   };
@@ -40,7 +55,6 @@ function UserContext({ children }) {
         userData,
         setUserData,
         getCurrentUser,
-        serverUrl,
       }}
     >
       {children}

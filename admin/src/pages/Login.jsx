@@ -18,16 +18,21 @@ function Login() {
   const AdminLogin = async (e) => {
     e.preventDefault();
     try {
-      const result = await axios.post(
-        serverUrl + "/api/auth/adminlogin",
-        { email, password },
-        { withCredentials: true },
-      );
+      console.log("SERVER URL:", serverUrl);
+      const result = await axios.post(serverUrl + "/api/auth/adminlogin", {
+        email,
+        password,
+      });
 
       console.log(result.data);
 
-      await getAdmin(); // ✅ admin data refresh
-      navigate("/"); // ✅ redirect to dashboard
+      localStorage.setItem("token", result.data.token);
+
+      await getAdmin();
+
+      setTimeout(() => {
+        window.location.href = "/";
+      }, 100);
     } catch (error) {
       console.log(error.response.data);
       alert(error.response.data.error);

@@ -13,22 +13,43 @@ function AdminProvider({ children }) {
 
   const getAdmin = async () => {
     try {
+      // Get token
+      const token = localStorage.getItem("token");
+
+      console.log("TOKEN:", token);
+
+      // If no token
+      if (!token) {
+        console.log("No token found");
+        return;
+      }
+
+      // API call
       const result = await axios.get(`${serverUrl}/api/user/getadmin`, {
-        withCredentials: true,
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       });
 
+      console.log("ADMIN DATA:", result.data);
+
+      // Save admin data
       setAdminData(result.data);
     } catch (error) {
-      setAdminData(null);
+      console.log("GET ADMIN ERROR:");
 
-      if (error.response?.status !== 401) {
-        console.log(error);
-      }
+      console.log(error.response?.data);
+
+      setAdminData(null);
     }
   };
 
   useEffect(() => {
-    getAdmin();
+    const token = localStorage.getItem("token");
+
+    if (token) {
+      getAdmin();
+    }
   }, []);
 
   return (

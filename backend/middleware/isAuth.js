@@ -1,22 +1,36 @@
+import jwt from "jsonwebtoken";
+
 const isAuth = async (req, res, next) => {
-  console.log("FULL COOKIES:", req.cookies);
+  try {
+    // GET AUTH HEADER
+    const authHeader = req.headers.authorization;
 
-  const token = req.cookies.token;
+    // CHECK AUTH HEADER
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({
+        success: false,
+        message: "User not logged in",
+      });
+    }
 
-  console.log("USER TOKEN:", token);
+    // EXTRACT TOKEN
+    const token = authHeader.split(" ")[1];
 
-  if (!token) {
+    // VERIFY TOKEN
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    // SAVE USER ID
+    req.userId = decoded.userId;
+
+    next();
+  } catch (error) {
+    console.log("AUTH ERROR:", error.message);
+
     return res.status(401).json({
       success: false,
-      message: "User not logged in",
+      message: "Invalid token",
     });
   }
-
-  const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-  req.userId = decoded.userId;
-
-  next();
 };
 
 export default isAuth;

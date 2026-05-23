@@ -3,7 +3,6 @@ import validator from "validator";
 import bcrypt from "bcrypt";
 
 import { gentoken, gentoken1 } from "../config/token.js";
-import { cookieOptions } from "../config/cookieOptions.js";
 
 // ================= REGISTER =================
 
@@ -11,7 +10,6 @@ export const registration = async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
-    // Check empty fields
     if (!name || !email || !password) {
       return res.status(400).json({
         success: false,
@@ -19,7 +17,6 @@ export const registration = async (req, res) => {
       });
     }
 
-    // Check user already exists
     const existUser = await User.findOne({ email });
 
     if (existUser) {
@@ -29,7 +26,6 @@ export const registration = async (req, res) => {
       });
     }
 
-    // Validate email
     if (!validator.isEmail(email)) {
       return res.status(400).json({
         success: false,
@@ -37,7 +33,6 @@ export const registration = async (req, res) => {
       });
     }
 
-    // Validate password
     if (password.length < 8) {
       return res.status(400).json({
         success: false,
@@ -45,25 +40,23 @@ export const registration = async (req, res) => {
       });
     }
 
-    // Hash password
     const hashPassword = await bcrypt.hash(password, 10);
 
-    // Create user
     const user = await User.create({
       name,
       email,
       password: hashPassword,
     });
 
-    // Generate token
+    // TOKEN GENERATE
     const token = gentoken(user._id);
 
-    // Save cookie
-    res.cookie("token", token, cookieOptions);
+    console.log("REGISTER TOKEN:", token);
 
     return res.status(201).json({
       success: true,
       message: "Registration successful",
+      token: token,
       user: {
         _id: user._id,
         name: user.name,
@@ -71,7 +64,7 @@ export const registration = async (req, res) => {
       },
     });
   } catch (error) {
-    console.log(error);
+    console.log("REGISTRATION ERROR:", error);
 
     return res.status(500).json({
       success: false,
@@ -86,7 +79,6 @@ export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Check empty fields
     if (!email || !password) {
       return res.status(400).json({
         success: false,
@@ -94,7 +86,6 @@ export const login = async (req, res) => {
       });
     }
 
-    // Find user
     const user = await User.findOne({ email });
 
     if (!user) {
@@ -104,7 +95,6 @@ export const login = async (req, res) => {
       });
     }
 
-    // Compare password
     const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
@@ -114,15 +104,15 @@ export const login = async (req, res) => {
       });
     }
 
-    // Generate token
+    // TOKEN GENERATE
     const token = gentoken(user._id);
 
-    // Save cookie
-    res.cookie("token", token, cookieOptions);
-
+    console.log("LOGIN TOKEN:", token);
+    console.log("LOGIN RESPONSE SENDING");
     return res.status(200).json({
       success: true,
       message: "Login successful",
+      token: token,
       user: {
         _id: user._id,
         name: user.name,
@@ -130,7 +120,7 @@ export const login = async (req, res) => {
       },
     });
   } catch (error) {
-    console.log(error);
+    console.log("LOGIN ERROR:", error);
 
     return res.status(500).json({
       success: false,
@@ -143,18 +133,13 @@ export const login = async (req, res) => {
 
 export const logout = async (req, res) => {
   try {
-    // Clear User Cookie
-    res.clearCookie("token", cookieOptions);
-
-    // Clear Admin Cookie
-    res.clearCookie("token1", cookieOptions);
-
+    console.log("LOGIN RESPONSE SENDING");
     return res.status(200).json({
       success: true,
       message: "Logout successful",
     });
   } catch (error) {
-    console.log(error);
+    console.log("LOGOUT ERROR:", error);
 
     return res.status(500).json({
       success: false,
@@ -171,7 +156,6 @@ export const googleLogin = async (req, res) => {
 
     let user = await User.findOne({ email });
 
-    // Create user if not exists
     if (!user) {
       const hashPassword = await bcrypt.hash("google_auth_user", 10);
 
@@ -182,15 +166,15 @@ export const googleLogin = async (req, res) => {
       });
     }
 
-    // Generate token
+    // TOKEN GENERATE
     const token = gentoken(user._id);
 
-    // Save cookie
-    res.cookie("token", token, cookieOptions);
-
+    console.log("GOOGLE TOKEN:", token);
+    console.log("LOGIN RESPONSE SENDING");
     return res.status(200).json({
       success: true,
       message: "Google login successful",
+      token: token,
       user: {
         _id: user._id,
         name: user.name,
@@ -198,7 +182,7 @@ export const googleLogin = async (req, res) => {
       },
     });
   } catch (error) {
-    console.log(error);
+    console.log("GOOGLE LOGIN ERROR:", error);
 
     return res.status(500).json({
       success: false,
@@ -217,15 +201,12 @@ export const adminLogin = async (req, res) => {
       email === process.env.ADMIN_EMAIL &&
       password === process.env.ADMIN_PASSWORD
     ) {
-      // Generate admin token
       const token = gentoken1(email);
-
-      // Save admin cookie
-      res.cookie("token1", token, cookieOptions);
-
+      console.log("LOGIN RESPONSE SENDING");
       return res.status(200).json({
         success: true,
         message: "Admin login successful",
+        token: token,
       });
     }
 
@@ -234,7 +215,7 @@ export const adminLogin = async (req, res) => {
       error: "Invalid credentials",
     });
   } catch (error) {
-    console.log(error);
+    console.log("ADMIN LOGIN ERROR:", error);
 
     return res.status(500).json({
       success: false,
